@@ -1,19 +1,39 @@
-Goal
-## Create a numeric input component.
+Numeric Input Component
 
-![figma Preview](./public/img.png)
+Описание решения
 
-[Figma](https://www.figma.com/file/OcyCt22I1Ha3fgLzGi0ZZy/Front-end-UI-Task?type=design&node-id=1-4&mode=design&t=ZzZ3vo84xwZ6uxJF-0)
+В рамках тестового задания был реализован переиспользуемый компонент NumericInput, отвечающий всем функциональным и визуальным требованиям.
 
-### Functional requirements:
-1. The user should only be able to enter digits.
-2. Groups of 3 digits should be separated by spaces (“1442” → “1 442”).
-3. Starting at a width of 72 px, the input should adapt to the size of the entered value.
+Функциональные особенности:
 
-### Design requirements:
-1. Should match the provided [Figma](https://www.figma.com/file/OcyCt22I1Ha3fgLzGi0ZZy/Front-end-UI-Task?type=design&node-id=1-4&mode=design&t=ZzZ3vo84xwZ6uxJF-0).
+Только цифры: При вводе значения используется регулярное выражение \D/g, которое отсекает любые нечисловые символы, предотвращая попадание мусорных данных в стейт. Встроенный атрибут inputMode="numeric" улучшает UX на мобильных устройствах, вызывая цифровую клавиатуру.
 
-### Code requirements:
-1. The input component should be usable as-is in other parts of the project.
-2. You can modify this project as you see fit to match a “production-ready” state. (optional)
-3. You can use any library/component that you deem necessary and would use in a real application. (optional)
+Форматирование разрядов: Реализовано разделение групп по 3 цифры с помощью пробелов (например, 1 442). Использовано регулярное выражение \B(?=(\d{3})+(?!\d))/g для форматирования строки при отображении.
+
+Удержание позиции каретки: При форматировании строки "на лету" стандартное поведение DOM сдвигает курсор в конец инпута. Эта проблема решена с помощью перерасчета позиции каретки и использования requestAnimationFrame для применения новой позиции после рендера React. Это позволяет пользователю комфортно редактировать длинные числа с середины строки.
+
+Адаптивная ширина: Инпут динамически подстраивается под ширину введенного значения, начиная от 72px (как указано в ТЗ).
+
+Техническая реализация адаптивной ширины
+
+Вместо использования JavaScript-вычислений (которые могут вызывать задержки и "прыжки" интерфейса) или нестандартных HTML-атрибутов, применен подход на базе CSS Grid.
+
+Компонент обернут в div со свойством inline-grid.
+
+Внутри находятся невидимый span (содержащий отформатированное значение) и сам input.
+
+Оба элемента помещены в одну ячейку грида (col-start-1 row-start-1), накладываясь друг на друга.
+
+Текст внутри span имеет свойство whitespace-pre, что заставляет контейнер расширяться ровно на ширину контента.
+
+input наследует эту ширину (w-full), обеспечивая идеально плавное растягивание без JS-оверхеда.
+
+Интеграция с проектом
+
+Согласно FSD-подобному подходу, компонент вынесен в изолированную директорию src/components/NumericInput.
+
+Интерфейс компонента типизирован (NumericInputProps) с помощью TypeScript, что гарантирует безопасность при переиспользовании.
+
+Компонент использует forwardRef для совместимости со сценариями, где родительскому компоненту может понадобиться прямой доступ к DOM-узлу инпута (например, для программного фокуса).
+
+В PersonEdit.tsx обеспечена корректная связь локального строкового стейта компонента с числовым форматом стора Zustand (Number(val) || 0).
